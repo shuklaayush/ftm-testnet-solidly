@@ -1,3 +1,58 @@
+## Setup
+Add ftm-test-fork network
+```
+brownie networks import network-config.yaml
+```
+
+## Chart
+https://miro.com/app/board/uXjVOSancDY=/
+
+## Addresses
+Name
+wFTM	0x27Ce41c3cb9AdB5Edb2d8bE253A1c6A64Db8c96d
+USDT	0x8ad96050318043166114884b59E2fc82210273b3
+MIM	0x976e33B07565b0c05B08b2e13AfFD3113e3D178d
+BaseV1	0x0673e1CF8EE91095232CFC98Ee1EbCeF42A1977E
+Name
+BaseV1Factory	0xd231865CE0eDB0079F0D0d7BB2E647458aa60d11
+BaseV1GaugesFactory	0x1649BE15FeA4F94075CC69c3502B1Ba4C341bBEa
+BaseV1Voter	0xd2F7fF8e5b362bafE2b57a82c5865B4355F884Ae
+BaseV1Router01	0x22460Cd07159EC690166860f15966C1446ED762B
+ve3	0xBE6bb6d9F4B1Bc2Ea1C0d69a17471b98bd164ab6
+ve3-dist	0x4Dc46A325B141751E09871279F9c7Fe214DA422C
+BaseV1Minter	0x3230F944a26288f49F5010b11BA96b0b9dC84e79
+
+
+## Copy paste setup
+```
+ftm = interface.IERC20("0x27Ce41c3cb9AdB5Edb2d8bE253A1c6A64Db8c96d")
+usdt = interface.IERC20("0x8ad96050318043166114884b59E2fc82210273b3")
+pair = interface.underlying("0xa3502f18766b17a07B487C6F395A23d3ef67D4DE")
+router = interface.IBaseV1Router01("0x22460Cd07159EC690166860f15966C1446ED762B")
+minter = interface.IBaseV1Minter("0x3230F944a26288f49F5010b11BA96b0b9dC84e79")
+ve = interface.ve("0xBE6bb6d9F4B1Bc2Ea1C0d69a17471b98bd164ab6")
+voter = interface.IBaseV1Voter("0xd2F7fF8e5b362bafE2b57a82c5865B4355F884Ae")
+gauge = interface.IBaseV1Gauge("0xdeb44B8d020952942734b370768F44b4F3226afd")
+baseToken = interface.underlying("0x0673e1CF8EE91095232CFC98Ee1EbCeF42A1977E")
+
+dev = accounts[0]
+AMT = 1000e18
+## Mint token
+baseToken.mint(dev, AMT, {"from": dev})
+## Approve for locking
+baseToken.approve(ve, AMT, {"from": dev})
+## Lock for 4 years
+lock_tx = ve.create_lock(AMT, 4 * 365 * 86400, {"from": dev})
+
+## Vote
+LOCK_ID = lock_tx.return_value
+voter.vote(LOCK_ID, [pair], [100], {"from": dev})
+
+## Figure out if rewards are there
+
+
+```
+
 # Badger Strategy V1 Brownie Mix
 
 - Video Introduction: https://youtu.be/FVbhgPYW_D0 (note follow installation and setup below before starting the video)
