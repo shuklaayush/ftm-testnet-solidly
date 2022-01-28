@@ -25,8 +25,9 @@ BaseV1Minter	0x3230F944a26288f49F5010b11BA96b0b9dC84e79
 
 ## Copy paste setup
 ```
-ftm = interface.IERC20("0x27Ce41c3cb9AdB5Edb2d8bE253A1c6A64Db8c96d")
-usdt = interface.IERC20("0x8ad96050318043166114884b59E2fc82210273b3")
+wftm = interface.underlying("0x27Ce41c3cb9AdB5Edb2d8bE253A1c6A64Db8c96d")
+ftm = interface.WETH("0x27Ce41c3cb9AdB5Edb2d8bE253A1c6A64Db8c96d")
+usdt = interface.underlying("0x8ad96050318043166114884b59E2fc82210273b3")
 pair = interface.underlying("0xa3502f18766b17a07B487C6F395A23d3ef67D4DE")
 router = interface.IBaseV1Router01("0x22460Cd07159EC690166860f15966C1446ED762B")
 minter = interface.IBaseV1Minter("0x3230F944a26288f49F5010b11BA96b0b9dC84e79")
@@ -48,9 +49,51 @@ lock_tx = ve.create_lock(AMT, 4 * 365 * 86400, {"from": dev})
 LOCK_ID = lock_tx.return_value
 voter.vote(LOCK_ID, [pair], [100], {"from": dev})
 
-## Figure out if rewards are there
+
+## Mint wFTM
+ftm.deposit({"from": dev, "value": 1e18})
+wftm.balanceOf(dev)
+# Mint USDT
+usdt.mint(dev, 3000e18, {"from": dev})
+
+## Approve router
+wftm.approve(router, wftm.balanceOf(dev), {"from": dev})
+usdt.approve(router, usdt.balanceOf(dev), {"from": dev})
+
+## Add liquidity
+router.addLiquidity(wftm, usdt, False, wftm.balanceOf(dev), usdt.balanceOf(dev), 0, 0, dev, 999999999999999999999, {"from": dev})
+
+## Confirm liqudiity is in
+pair.balanceOf(dev)
+
+## Approve the gauge
+pair.approve(gauge, pair.balanceOf(dev), {"from": dev})
+
+## Stake in the gauge
+gauge.deposit(pair.balanceOf(dev), LOCK_ID, {"from": dev})
+gauge.balanceOf(dev, {"from": dev})
+
+## Sleep 2 weeks
+chain.sleep(604800 * 2)
+chain.mine()
+
+## Bring emissions forward
+minter.update_period({"from": dev})
 
 
+baseToken.balanceOf(gauge)
+## Distribute to gauges
+voter.distribute({"from": dev})
+
+baseToken.balanceOf(gauge) ## Should have increased
+
+voter.claimable(gauge) ## Can't make it increase for some reason
+
+## Get the rewards
+voter.claimRewards([gauge.address], [[baseToken.address]], {"from": dev})
+
+## See increase in balance!!!
+baseToken.balanceOf(dev)
 ```
 
 # Badger Strategy V1 Brownie Mix
