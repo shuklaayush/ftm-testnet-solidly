@@ -3,9 +3,10 @@
 
 BADGER_DEV_MULTISIG = "0xb65cef03b9b89f99517643226d76e286ee999e77"
 
-WANT = "0x6b175474e89094c44da98b954eedeac495271d0f"  ## Dai
-LP_COMPONENT = "0x028171bca77440897b824ca71d1c56cac55b68a3"  ## aDAI
-REWARD_TOKEN = "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"  ## AAVE Token
+## NOTE: Because this is a bodged testnet mix, conftest.py is the "real" code and these are just values to feed to the strat
+WANT = "0xa3502f18766b17a07B487C6F395A23d3ef67D4DE"  ## pair from conftest.py
+LP_COMPONENT = "0xdeb44B8d020952942734b370768F44b4F3226afd"  ## gauge from conftest.py
+REWARD_TOKEN = "0x0673e1CF8EE91095232CFC98Ee1EbCeF42A1977E"  ## baseToken from conftest.py
 
 PROTECTED_TOKENS = [WANT, LP_COMPONENT, REWARD_TOKEN]
 ## Fees in Basis Points

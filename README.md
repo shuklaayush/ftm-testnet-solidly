@@ -89,7 +89,7 @@ baseToken.balanceOf(gauge) ## Should have increased
 
 voter.claimable(gauge) ## Can't make it increase for some reason
 
-## Get the rewards
+## Get the rewards
 voter.claimRewards([gauge.address], [[baseToken.address]], {"from": dev})
 
 ## See increase in balance!!!
