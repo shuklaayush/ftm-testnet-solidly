@@ -9,4 +9,5 @@ interface IBaseV1Gauge {
       function withdrawAll() external;
       function withdraw(uint amount) external;
       function earned(address token, address account) external view returns (uint);
+      function getReward(address account, address[] memory tokens) external;
 }
