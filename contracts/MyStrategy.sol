@@ -23,6 +23,7 @@ contract MyStrategy is BaseStrategy {
     address public lpComponent; // Gauge
     address public reward; // Token we farm and swap to want / lpComponent
 
+    // TODO: Check FTM address
     address public constant BADGER_TREE = 0x660802Fc641b154aBA66a62137e71f331B6d787A;
 
     // Used to signal to the Badger Tree that rewards where sent to it
