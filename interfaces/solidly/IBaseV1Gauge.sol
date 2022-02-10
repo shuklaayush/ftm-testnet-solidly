@@ -4,6 +4,8 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 interface IBaseV1Gauge {
+      function stake() external view returns (address);
+
       function balanceOf(address) external view returns (uint);
       function deposit(uint amount, uint tokenId) external;
       function withdrawAll() external;
