@@ -17,11 +17,23 @@ from dotmap import DotMap
 import pytest
 
 @pytest.fixture
+def solid():
+    return interface.IBaseV1Token("0x888EF71766ca594DED1F0FA3AE64eD2941740A20")
+
+@pytest.fixture
 def router():
     return interface.IBaseV1Router01("0xa38cd27185a464914D3046f0AB9d43356B34829D")
+
+@pytest.fixture
+def ve():
+    return interface.ve("0xcBd8fEa77c2452255f59743f55A3Ea9d83b3c72b")
+
+@pytest.fixture
+def voter():
+    return interface.IBaseV1Voter("0xdC819F5d05a6859D2faCbB4A44E5aB105762dbaE")
     
 @pytest.fixture
-def custom_setup(web3, router):
+def custom_setup(web3, router, solid, ve, voter):
     dev = accounts[0]
     STABLE = True
     AMT = 1000e18
@@ -44,6 +56,17 @@ def custom_setup(web3, router):
 
     ## Approve the gauge
     pair.approve(LP_COMPONENT, pair.balanceOf(dev), {"from": dev})
+
+    ## Mint token
+    solid.mint(dev, AMT, {"from": solid.minter()})
+    ## Approve for locking
+    solid.approve(ve, AMT, {"from": dev})
+    ## Lock for 4 years
+    lock_tx = ve.create_lock(AMT, 4 * 365 * 86400, {"from": dev})
+
+    ## Vote
+    LOCK_ID = lock_tx.return_value
+    voter.vote(LOCK_ID, [pair], [100], {"from": dev})
 
 @pytest.fixture
 def deployed(custom_setup):
