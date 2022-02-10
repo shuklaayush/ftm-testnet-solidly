@@ -148,13 +148,14 @@ contract MyStrategy is BaseStrategy {
 
         // No autocompounding
         if (rewardBalance > 0) {
-            _processRewardsFees(rewardBalance, reward);
+            (uint256 governanceRewardsFee, uint256 strategistRewardsFee) = _processRewardsFees(rewardBalance, reward);
 
             // Transfer balance of Sushi to the Badger Tree
-            IERC20Upgradeable(reward).safeTransfer(BADGER_TREE, rewardBalance);
+            uint256 rewardToTree = rewardBalance.sub(governanceRewardsFee).sub(strategistRewardsFee);
+            IERC20Upgradeable(reward).safeTransfer(BADGER_TREE, rewardToTree);
 
             // NOTE: Signal the amount of reward sent to the badger tree
-            emit TreeDistribution(reward, rewardBalance, block.number, block.timestamp);
+            emit TreeDistribution(reward, rewardToTree, block.number, block.timestamp);
         }
 
         /// @dev Harvest event that every strategy MUST have, see BaseStrategy
