@@ -23,8 +23,7 @@ contract MyStrategy is BaseStrategy {
     address public lpComponent; // Gauge
     address public reward; // Token we farm and swap to want / lpComponent
 
-    // TODO: Check FTM address
-    address public constant BADGER_TREE = 0x660802Fc641b154aBA66a62137e71f331B6d787A;
+    address public badgerTree;
 
     // Used to signal to the Badger Tree that rewards where sent to it
     event TreeDistribution(
@@ -61,13 +60,15 @@ contract MyStrategy is BaseStrategy {
 
         /// @dev do one off approvals here
         IERC20Upgradeable(want).safeApprove(lpComponent, type(uint256).max);
+
+        badgerTree = 0x660802Fc641b154aBA66a62137e71f331B6d787A;
     }
 
     /// ===== View Functions =====
 
     // @dev Specify the name of the strategy
     function getName() external pure override returns (string memory) {
-        return "SolidlyStaker";
+        return "SolidlyStakerTest";
     }
 
     // @dev Specify the version of the Strategy, for upgrades
@@ -100,6 +101,12 @@ contract MyStrategy is BaseStrategy {
     }
 
     /// ===== Internal Core Implementations =====
+
+    /// @dev TODO: Temp
+    function setBadgerTree(address _badgerTree) external {
+        _onlyGovernance();
+        badgerTree = _badgerTree;
+    }
 
     /// @dev security check to avoid moving tokens that would cause a rugpull, edit based on strat
     function _onlyNotProtectedTokens(address _asset) internal override {
@@ -144,34 +151,40 @@ contract MyStrategy is BaseStrategy {
         rewards[0] = reward;
 
         IBaseV1Gauge(lpComponent).getReward(address(this), rewards);
-        uint256 rewardBalance = IERC20Upgradeable(reward).balanceOf(address(this));
+        uint256 rewardBalance =
+            IERC20Upgradeable(reward).balanceOf(address(this));
 
-        // No autocompounding
         if (rewardBalance > 0) {
-            (uint256 governanceRewardsFee, uint256 strategistRewardsFee) = _processRewardsFees(rewardBalance, reward);
+            (uint256 governanceRewardsFee, uint256 strategistRewardsFee) =
+                _processRewardsFees(rewardBalance, reward);
 
             // Transfer balance of Sushi to the Badger Tree
-            uint256 rewardToTree = rewardBalance.sub(governanceRewardsFee).sub(strategistRewardsFee);
-            IERC20Upgradeable(reward).safeTransfer(BADGER_TREE, rewardToTree);
+            uint256 rewardToTree =
+                rewardBalance.sub(governanceRewardsFee).sub(
+                    strategistRewardsFee
+                );
+            IERC20Upgradeable(reward).safeTransfer(badgerTree, rewardToTree);
 
             // NOTE: Signal the amount of reward sent to the badger tree
-            emit TreeDistribution(reward, rewardToTree, block.number, block.timestamp);
+            emit TreeDistribution(
+                reward,
+                rewardToTree,
+                block.number,
+                block.timestamp
+            );
         }
 
         /// @dev Harvest event that every strategy MUST have, see BaseStrategy
         emit Harvest(0, block.number);
-    }
 
-    // Alternative Harvest with Price received from harvester, used to avoid exessive front-running
-    function harvest(uint256 price)
-        external
-        whenNotPaused
-        returns (uint256 harvested)
-    { }
+        // No autocompounding
+        harvested = 0;
+    }
 
     /// @dev Rebalance, Compound or Pay off debt here
     function tend() external whenNotPaused {
         _onlyAuthorizedActors();
+        revert();
     }
 
     /// ===== Internal Helper Functions =====

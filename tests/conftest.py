@@ -26,7 +26,7 @@ def router():
 
 @pytest.fixture
 def ve():
-    return interface.ve("0xcBd8fEa77c2452255f59743f55A3Ea9d83b3c72b")
+    return interface.IVe("0xcBd8fEa77c2452255f59743f55A3Ea9d83b3c72b")
 
 @pytest.fixture
 def voter():

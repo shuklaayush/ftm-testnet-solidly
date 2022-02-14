@@ -22,7 +22,7 @@ class StrategyResolver(StrategyCoreResolver):
         return {
             "gauge": strategy.lpComponent(),
             "reward": strategy.reward(),
-            "badgerTree": strategy.BADGER_TREE(),
+            "badgerTree": strategy.badgerTree(),
         }
 
     def hook_after_confirm_withdraw(self, before, after, params):
