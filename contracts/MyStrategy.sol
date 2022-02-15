@@ -61,7 +61,7 @@ contract MyStrategy is BaseStrategy {
         /// @dev do one off approvals here
         IERC20Upgradeable(want).safeApprove(lpComponent, type(uint256).max);
 
-        badgerTree = 0x660802Fc641b154aBA66a62137e71f331B6d787A;
+        badgerTree = 0x89122c767A5F543e663DB536b603123225bc3823;
     }
 
     /// ===== View Functions =====
