@@ -8,8 +8,10 @@ import "./deps/SettV4.sol";
 import "./MyStrategy.sol";
 import "./proxy/AdminUpgradeabilityProxy.sol";
 import "../interfaces/solidly/IBaseV1Voter.sol";
+import "../interfaces/badger/IBadgerRegistry.sol";
+import "../deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 
-contract BadgerSolidlyFactory {
+contract BadgerSolidlyFactory is Initializable {
     /// =====================
     /// ===== Constants =====
     /// =====================
@@ -17,12 +19,15 @@ contract BadgerSolidlyFactory {
     // TODO: Maybe make settable and not constants
     uint256 public constant PERFORMANCE_FEE_GOVERNANCE = 1000;
     uint256 public constant PERFORMANCE_FEE_STRATEGIST = 1000;
-    uint256 public constant WITHDRAW_FEE = 100;
+    uint256 public constant WITHDRAWAL_FEE = 100;
 
     address public constant SOLID = 0x888EF71766ca594DED1F0FA3AE64eD2941740A20;
 
     IBaseV1Voter public constant SOLIDLY_VOTER =
         IBaseV1Voter(0xdC819F5d05a6859D2faCbB4A44E5aB105762dbaE);
+
+    IBadgerRegistry public constant REGISTRY =
+        IBadgerRegistry(0xFda7eB6f8b7a9e9fCFd348042ae675d1d652454f);
 
     /// =================
     /// ===== State =====
@@ -41,20 +46,18 @@ contract BadgerSolidlyFactory {
 
     Controller public controller;
 
-    constructor(
-        address _governance,
-        address _strategist,
-        address _keeper,
-        address _guardian,
-        address _rewards,
-        address _proxyAdmin
-    ) public {
+    function initialize() public initializer {
+        address _governance = REGISTRY.get("governance");
+        address _keeper = REGISTRY.get("keeper");
+        address _guardian = REGISTRY.get("guardian");
+        address _proxyAdminTimelock = REGISTRY.get("proxyAdminTimelock");
+
         governance = _governance;
-        strategist = _strategist;
+        strategist = _governance;
         keeper = _keeper;
         guardian = _guardian;
-        rewards = _rewards;
-        proxyAdmin = _proxyAdmin;
+        rewards = _governance;
+        proxyAdmin = _proxyAdminTimelock;
 
         strategyLogic = address(new MyStrategy());
         controllerLogic = address(new Controller());
@@ -63,13 +66,13 @@ contract BadgerSolidlyFactory {
         controller = Controller(
             deployProxy(
                 controllerLogic,
-                _proxyAdmin,
+                _proxyAdminTimelock,
                 abi.encodeWithSelector(
                     Controller.initialize.selector,
-                    _governance,
-                    _strategist,
+                    address(this),
+                    _governance, // strategist
                     _keeper,
-                    _rewards
+                    _governance // rewards
                 )
             )
         );
@@ -99,6 +102,8 @@ contract BadgerSolidlyFactory {
             controller.strategies(_token) == address(0),
             "already deployed"
         );
+        address gauge = SOLIDLY_VOTER.gauges(_token);
+        require(gauge != address(0), "no gauge");
 
         strategy_ = deployProxy(
             strategyLogic,
@@ -110,14 +115,15 @@ contract BadgerSolidlyFactory {
                 address(controller),
                 keeper,
                 guardian,
-                [_token, SOLIDLY_VOTER.gauges(_token), SOLID],
+                [_token, gauge, SOLID],
                 [
                     PERFORMANCE_FEE_GOVERNANCE,
                     PERFORMANCE_FEE_STRATEGIST,
-                    WITHDRAW_FEE
+                    WITHDRAWAL_FEE
                 ]
             )
         );
+
         controller.approveStrategy(_token, strategy_);
         controller.setStrategy(_token, strategy_);
     }
