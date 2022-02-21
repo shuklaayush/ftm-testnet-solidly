@@ -3,18 +3,16 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./deps/Controller.sol";
-import "./deps/SettV4.sol";
-import "./MyStrategy.sol";
 import "./proxy/AdminUpgradeabilityProxy.sol";
-import "../interfaces/solidly/IBaseV1Voter.sol";
-import "../interfaces/badger/IBadgerRegistry.sol";
 import "../deps/@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "../interfaces/badger/IController.sol";
+import "../interfaces/badger/IBadgerRegistry.sol";
+import "../interfaces/solidly/IBaseV1Voter.sol";
 
 contract BadgerSolidlyFactory is Initializable {
-    /// =====================
-    /// ===== Constants =====
-    /// =====================
+    // =====================
+    // ===== Constants =====
+    // =====================
 
     // TODO: Maybe make settable and not constants
     uint256 public constant PERFORMANCE_FEE_GOVERNANCE = 1000;
@@ -29,9 +27,9 @@ contract BadgerSolidlyFactory is Initializable {
     IBadgerRegistry public constant REGISTRY =
         IBadgerRegistry(0xFda7eB6f8b7a9e9fCFd348042ae675d1d652454f);
 
-    /// =================
-    /// ===== State =====
-    /// =================
+    // =================
+    // ===== State =====
+    // =================
 
     address public governance;
     address public strategist;
@@ -41,14 +39,13 @@ contract BadgerSolidlyFactory is Initializable {
     address public proxyAdmin;
 
     address public strategyLogic;
-    address public controllerLogic;
-    address public settLogic;
+    address public vaultLogic;
 
-    Controller public controller;
+    IController public controller;
 
-    /// ==================
-    /// ===== Events =====
-    /// ==================
+    // ==================
+    // ===== Events =====
+    // ==================
 
     event Deployed(
         address indexed want,
@@ -56,7 +53,11 @@ contract BadgerSolidlyFactory is Initializable {
         address indexed vault
     );
 
-    function initialize() public initializer {
+    function initialize(
+        address _controllerLogic,
+        address _strategyLogic,
+        address _vaultLogic
+    ) public initializer {
         address _governance = REGISTRY.get("governance");
         address _keeper = REGISTRY.get("keeperAccessControl");
         address _guardian = REGISTRY.get("guardian");
@@ -74,16 +75,15 @@ contract BadgerSolidlyFactory is Initializable {
         rewards = _governance;
         proxyAdmin = _proxyAdminTimelock;
 
-        strategyLogic = address(new MyStrategy());
-        controllerLogic = address(new Controller());
-        settLogic = address(new SettV4());
+        strategyLogic = _strategyLogic;
+        vaultLogic = _vaultLogic;
 
-        controller = Controller(
+        controller = IController(
             deployProxy(
-                controllerLogic,
+                _controllerLogic,
                 _proxyAdminTimelock,
                 abi.encodeWithSelector(
-                    Controller.initialize.selector,
+                    IController.initialize.selector,
                     address(this), // governance
                     _governance, // strategist
                     _keeper,
@@ -93,9 +93,9 @@ contract BadgerSolidlyFactory is Initializable {
         );
     }
 
-    /// ====================
-    /// ===== External =====
-    /// ====================
+    // ====================
+    // ===== External =====
+    // ====================
 
     function deploy(address _want)
         external
@@ -107,9 +107,9 @@ contract BadgerSolidlyFactory is Initializable {
         emit Deployed(_want, strategy_, vault_);
     }
 
-    /// ============================
-    /// ===== Internal helpers =====
-    /// ============================
+    // ============================
+    // ===== Internal helpers =====
+    // ============================
 
     function deployStrategy(address _token)
         internal
@@ -125,8 +125,8 @@ contract BadgerSolidlyFactory is Initializable {
         strategy_ = deployProxy(
             strategyLogic,
             proxyAdmin,
-            abi.encodeWithSelector(
-                MyStrategy.initialize.selector,
+            abi.encodeWithSignature(
+                "initialize(address,address,address,address,address,address[3],uint256[3])",
                 governance,
                 strategist,
                 address(controller),
@@ -149,10 +149,10 @@ contract BadgerSolidlyFactory is Initializable {
         require(controller.vaults(_token) == address(0), "already deployed");
 
         vault_ = deployProxy(
-            settLogic,
+            vaultLogic,
             proxyAdmin,
-            abi.encodeWithSelector(
-                SettV4.initialize.selector,
+            abi.encodeWithSignature(
+                "initialize(address,address,address,address,address,bool,string,string)",
                 _token,
                 address(controller),
                 governance,

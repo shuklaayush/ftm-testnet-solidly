@@ -5,28 +5,35 @@ import "ds-test/test.sol";
 import "forge-std/Vm.sol";
 
 import "../deps/Controller.sol";
+import "../deps/SettV4.sol";
+import "../MyStrategy.sol";
+import "../../interfaces/badger/IController.sol";
 import "../BadgerSolidlyFactory.sol";
 
 contract BadgerSolidlyFactoryTest is DSTest {
-    /// ==============
-    /// ===== Vm =====
-    /// ==============
+    // ==============
+    // ===== Vm =====
+    // ==============
 
     Vm constant vm = Vm(HEVM_ADDRESS);
 
-    /// =================
-    /// ===== State =====
-    /// =================
+    // =================
+    // ===== State =====
+    // =================
 
     BadgerSolidlyFactory factory = new BadgerSolidlyFactory();
-    Controller controller;
+    IController controller;
 
-    /// ==================
-    /// ===== Set up =====
-    /// ==================
+    // ==================
+    // ===== Set up =====
+    // ==================
 
     function setUp() public {
-        factory.initialize();
+        factory.initialize(
+            address(new Controller()),
+            address(new MyStrategy()),
+            address(new SettV4())
+        );
 
         controller = factory.controller();
     }
@@ -37,9 +44,9 @@ contract BadgerSolidlyFactoryTest is DSTest {
         address indexed vault
     );
 
-    /// ======================
-    /// ===== Unit Tests =====
-    /// ======================
+    // ======================
+    // ===== Unit Tests =====
+    // ======================
 
     function testDeploy() public {
         address want = 0xC0240Ee4405f11EFb87A00B432A8be7b7Afc97CC;
