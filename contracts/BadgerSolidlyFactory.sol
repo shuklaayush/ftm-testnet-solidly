@@ -179,7 +179,7 @@ contract BadgerSolidlyFactory is Initializable {
 TODO:
 - Issues with having factory as governance of controller?
 - Deterministic proxy deployments using create2 with bytecode as salt?
-- setVaultLogic/setStrategyLogic by owner?
+- setVaultLogic/setStrategyLogic by owner? Ownable?
 - Only strategy/vault deployments?
 - Parameter settings (fees etc.)?
 */
