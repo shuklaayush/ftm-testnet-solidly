@@ -46,11 +46,26 @@ contract BadgerSolidlyFactory is Initializable {
 
     Controller public controller;
 
+    /// ==================
+    /// ===== Events =====
+    /// ==================
+
+    event Deployed(
+        address indexed want,
+        address indexed strategy,
+        address indexed vault
+    );
+
     function initialize() public initializer {
         address _governance = REGISTRY.get("governance");
-        address _keeper = REGISTRY.get("keeper");
+        address _keeper = REGISTRY.get("keeperAccessControl");
         address _guardian = REGISTRY.get("guardian");
         address _proxyAdminTimelock = REGISTRY.get("proxyAdminTimelock");
+
+        require(_governance != address(0), "ZERO ADDRESS");
+        require(_keeper != address(0), "ZERO ADDRESS");
+        require(_guardian != address(0), "ZERO ADDRESS");
+        require(_proxyAdminTimelock != address(0), "ZERO ADDRESS");
 
         governance = _governance;
         strategist = _governance;
@@ -69,7 +84,7 @@ contract BadgerSolidlyFactory is Initializable {
                 _proxyAdminTimelock,
                 abi.encodeWithSelector(
                     Controller.initialize.selector,
-                    address(this),
+                    address(this), // governance
                     _governance, // strategist
                     _keeper,
                     _governance // rewards
@@ -88,6 +103,8 @@ contract BadgerSolidlyFactory is Initializable {
     {
         strategy_ = deployStrategy(_want);
         vault_ = deployVault(_want);
+
+        emit Deployed(_want, strategy_, vault_);
     }
 
     /// ============================
@@ -157,3 +174,12 @@ contract BadgerSolidlyFactory is Initializable {
         proxy_ = address(new AdminUpgradeabilityProxy(_logic, _admin, _data));
     }
 }
+
+/*
+TODO:
+- Issues with having factory as governance of controller?
+- Deterministic proxy deployments using create2 with bytecode as salt?
+- setVaultLogic/setStrategyLogic by owner?
+- Only strategy/vault deployments?
+- Parameter settings (fees etc.)?
+*/
