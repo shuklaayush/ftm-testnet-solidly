@@ -79,7 +79,7 @@ def test_single_user_harvest_flow(
         snap.settTend({"from": strategyKeeper})
 
     chain.sleep(days(14))
-    voter.distribute({'from': deployer})
+    voter.distribute({"from": deployer})
 
     with brownie.reverts("onlyAuthorizedActors"):
         strategy.harvest({"from": randomUser})
@@ -276,7 +276,7 @@ def test_single_user_harvest_flow_remove_fees(
         snap.settTend({"from": deployer})
 
     chain.sleep(days(14))
-    voter.distribute({'from': deployer})
+    voter.distribute({"from": deployer})
 
     with brownie.reverts("onlyAuthorizedActors"):
         strategy.harvest({"from": randomUser})

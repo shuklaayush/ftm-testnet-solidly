@@ -12,5 +12,5 @@ from helpers.time import days
 
 
 def test_my_custom_test(router, deployer, want):
-  assert want.balanceOf(deployer) > 0
-  assert True
+    assert want.balanceOf(deployer) > 0
+    assert True

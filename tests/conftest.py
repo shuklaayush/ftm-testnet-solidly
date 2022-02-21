@@ -16,22 +16,27 @@ from config import (
 from dotmap import DotMap
 import pytest
 
+
 @pytest.fixture
 def solid():
     return interface.IBaseV1Token("0x888EF71766ca594DED1F0FA3AE64eD2941740A20")
+
 
 @pytest.fixture
 def router():
     return interface.IBaseV1Router01("0xa38cd27185a464914D3046f0AB9d43356B34829D")
 
+
 @pytest.fixture
 def ve():
     return interface.IVe("0xcBd8fEa77c2452255f59743f55A3Ea9d83b3c72b")
 
+
 @pytest.fixture
 def voter():
     return interface.IBaseV1Voter("0xdC819F5d05a6859D2faCbB4A44E5aB105762dbaE")
-    
+
+
 @pytest.fixture
 def custom_setup(web3, router, solid, ve, voter):
     dev = accounts[0]
@@ -49,7 +54,18 @@ def custom_setup(web3, router, solid, ve, voter):
         token.approve(router, AMT, {"from": dev})
 
     ## Add liquidity
-    router.addLiquidity(token0, token1, STABLE, token0.balanceOf(dev), token1.balanceOf(dev), 0, 0, dev, 999999999999999999999, {"from": dev})
+    router.addLiquidity(
+        token0,
+        token1,
+        STABLE,
+        token0.balanceOf(dev),
+        token1.balanceOf(dev),
+        0,
+        0,
+        dev,
+        999999999999999999999,
+        {"from": dev},
+    )
 
     ## Confirm liqudiity is in
     print(f"Balance: {pair.balanceOf(dev)}")
@@ -67,6 +83,7 @@ def custom_setup(web3, router, solid, ve, voter):
     ## Vote
     LOCK_ID = lock_tx.return_value
     voter.vote(LOCK_ID, [pair], [100], {"from": dev})
+
 
 @pytest.fixture
 def deployed(custom_setup):
@@ -140,10 +157,7 @@ def deployed(custom_setup):
         want=want,
         lpComponent=lpComponent,
         rewardToken=rewardToken,
-        
     )
-
-
 
 
 ## Contracts ##
@@ -203,6 +217,7 @@ def settKeeper(vault):
 @pytest.fixture
 def strategyKeeper(strategy):
     return accounts.at(strategy.keeper(), force=True)
+
 
 ## Forces reset before each test
 @pytest.fixture(autouse=True)
