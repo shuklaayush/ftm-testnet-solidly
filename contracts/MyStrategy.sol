@@ -67,7 +67,7 @@ contract MyStrategy is BaseStrategy {
 
     // @dev Specify the name of the strategy
     function getName() external pure override returns (string memory) {
-        return "SolidlyStakerTest";
+        return "SolidlyStaker";
     }
 
     // @dev Specify the version of the Strategy, for upgrades
